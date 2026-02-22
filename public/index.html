@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="sk">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FluxPlayer - Ultimate Music Experience</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="logo">
+        <i class="fa-solid fa-compact-disc"></i>
+        <span>FluxPlayer</span>
+      </div>
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" onclick="showSection('library')">
+          <i class="fa-solid fa-music"></i> Library
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('playlist')">
+          <i class="fa-solid fa-list-ul"></i> Playlist
+        </a>
+        <div class="nav-divider"></div>
+        <div class="theme-switcher">
+          <h3>Accent Color</h3>
+          <div class="theme-options">
+            <button class="theme-btn blue" onclick="setTheme('blue')"></button>
+            <button class="theme-btn green" onclick="setTheme('green')"></button>
+            <button class="theme-btn purple" onclick="setTheme('purple')"></button>
+            <button class="theme-btn orange" onclick="setTheme('orange')"></button>
+          </div>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="upload-section">
+          <h3>Upload Song</h3>
+          <label for="file-upload" class="custom-file-upload">
+            <i class="fa-solid fa-cloud-upload-alt"></i> Choose File
+          </label>
+          <input type="file" id="file-upload" hidden>
+          <button class="btn-primary" onclick="upload()">Upload</button>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar">
+        <div class="search-box">
+          <i class="fa-solid fa-search"></i>
+          <input type="text" id="search-input" placeholder="Search songs, artists..." oninput="filterSongs()">
+        </div>
+        <div class="top-actions">
+          <button class="icon-toggle" onclick="toggleFullscreen()" title="Fullscreen Mode">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+        </div>
+      </header>
+
+      <section id="library-section" class="content-section">
+        <div class="section-header">
+          <h2>Library</h2>
+          <div class="header-controls">
+            <select id="sort-select" onchange="sortLibrary()">
+              <option value="name">Sort by Name</option>
+              <option value="artist">Sort by Artist</option>
+              <option value="newest">Sort by Newest</option>
+            </select>
+            <span class="song-count" id="library-count">0 songs</span>
+          </div>
+        </div>
+        <div class="song-grid" id="songs-list">
+          <!-- Songs will be injected here -->
+        </div>
+      </section>
+
+      <section id="playlist-section" class="content-section" style="display: none;">
+        <div class="section-header">
+          <h2>Current Playlist</h2>
+          <button class="btn-secondary" onclick="clearPlaylist()">Clear All</button>
+        </div>
+        <div class="playlist-container" id="playlist-list">
+          <!-- Playlist items will be injected here -->
+        </div>
+      </section>
+    </main>
+
+    <footer class="player-bar">
+      <div class="now-playing">
+        <div class="album-art" id="current-art">
+          <i class="fa-solid fa-music"></i>
+        </div>
+        <div class="track-info">
+          <div class="track-name" id="current-track">Not Playing</div>
+          <div class="artist-name" id="current-artist">Select a song</div>
+        </div>
+        <div id="mini-visualizer" class="mini-visualizer">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div class="player-controls">
+        <div class="control-buttons">
+          <button class="ctrl-btn" id="shuffle-btn" onclick="toggleShuffle()" title="Shuffle">
+            <i class="fa-solid fa-random"></i>
+          </button>
+          <button class="ctrl-btn" onclick="prev()" title="Previous">
+            <i class="fa-solid fa-step-backward"></i>
+          </button>
+          <button class="ctrl-btn main-play" id="play-pause-btn" onclick="togglePlay()" title="Play">
+            <i class="fa-solid fa-play"></i>
+          </button>
+          <button class="ctrl-btn" onclick="stopMusic()" title="Stop">
+            <i class="fa-solid fa-stop"></i>
+          </button>
+          <button class="ctrl-btn" onclick="next()" title="Next">
+            <i class="fa-solid fa-step-forward"></i>
+          </button>
+          <button class="ctrl-btn" id="repeat-btn" onclick="toggleRepeat()" title="Repeat">
+            <i class="fa-solid fa-redo"></i>
+          </button>
+        </div>
+        <div class="progress-container">
+          <span class="time" id="current-time">0:00</span>
+          <div class="progress-bar-bg" onclick="seek(event)">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+          <span class="time" id="total-time">0:00</span>
+        </div>
+      </div>
+
+      <div class="volume-controls">
+        <i class="fa-solid fa-volume-up"></i>
+        <input type="range" min="0" max="100" value="50" class="volume-slider" id="volume-slider"
+          oninput="volume(this.value)">
+      </div>
+    </footer>
+  </div>
+
+  <!-- Fullscreen Overlay -->
+  <div id="fullscreen-overlay" class="fullscreen-overlay">
+    <button class="close-fullscreen" onclick="toggleFullscreen()">
+      <i class="fa-solid fa-compress"></i>
+    </button>
+    <div class="fs-content">
+      <div class="fs-art-container">
+        <img src="" id="fs-art" alt="Album Art">
+        <div class="fs-visualizer" id="fs-visualizer">
+          <!-- Bars will be generated by JS -->
+        </div>
+      </div>
+      <div class="fs-info">
+        <h1 id="fs-track">Song Title</h1>
+        <h2 id="fs-artist">Artist Name</h2>
+        <div class="fs-controls">
+          <!-- Minimal controls copied from player bar -->
+        </div>
+      </div>
+    </div>
+    <div class="fs-background" id="fs-bg"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
