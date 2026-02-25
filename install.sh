@@ -64,5 +64,10 @@ npm install --no-audit --no-fund
 # 5. Final Setup
 mkdir -p music
 echo "✅ Installation complete!"
+echo ""
+echo "💖 If FluxPlayer improves your listening experience, please consider supporting development:"
+echo "   Donate:  https://denisvarga.eu/donate (PayPal)"
+echo "   GitHub:  https://github.com/DenisVargaeu/FluxPlayer (Star us!)"
+echo ""
 echo "▶️  To start the server, run: node server.js"
 echo "🌐 Then open http://localhost:7763 in your browser."

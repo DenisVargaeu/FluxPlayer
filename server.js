@@ -10,6 +10,7 @@ const PORT = 7763;
 
 app.use(express.json());
 app.use(express.static("public"));
+app.use("/landing", express.static("landing"));
 
 const MUSIC_DIR = path.join(__dirname, "music");
 const PLAYLIST_FILE = path.join(__dirname, "playlist.json");

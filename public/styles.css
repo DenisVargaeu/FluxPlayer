@@ -1,19 +1,21 @@
 :root {
-  --bg-color: #0d1117;
-  --sidebar-bg: #161b22;
-  --card-bg: #21262d;
-  --accent-color: #58a6ff;
-  --accent-glow: rgba(88, 166, 255, 0.4);
-  --text-primary: #f0f6fc;
-  --text-secondary: #8b949e;
-  --player-bg: rgba(22, 27, 34, 0.8);
-  --border-color: #30363d;
+  --bg-color: #0a140f;
+  --sidebar-bg: #0d1a13;
+  --card-bg: #16261d;
+  --accent-color: #1DB954;
+  --accent-glow: rgba(29, 185, 84, 0.4);
+  --accent-hover: #1ed760;
+  --text-primary: #f0fcf4;
+  --text-secondary: #8ba694;
+  --player-bg: rgba(13, 26, 19, 0.85);
+  --border-color: #243d2f;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="green"] {
-  --accent-color: #1DB954;
-  --accent-glow: rgba(29, 185, 84, 0.4);
+  --accent-color: #00ff66;
+  --accent-glow: rgba(0, 255, 102, 0.4);
+  --accent-hover: #33ff85;
 }
 
 [data-theme="purple"] {
@@ -372,7 +374,7 @@ body {
 
 .playlist-item.active {
   border-left: 4px solid var(--accent-color);
-  background-color: rgba(88, 166, 255, 0.1);
+  background-color: rgba(29, 185, 84, 0.1);
 }
 
 .item-index {
