@@ -365,11 +365,139 @@ async function upload() {
 function showSection(section) {
   document.getElementById('library-section').style.display = section === 'library' ? 'block' : 'none';
   document.getElementById('playlist-section').style.display = section === 'playlist' ? 'block' : 'none';
+  document.getElementById('settings-section').style.display = section === 'settings' ? 'block' : 'none';
+
   document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.remove('active');
-    if (item.innerText.toLowerCase().includes(section)) item.classList.add('active');
+    // More robust active state check
+    const itemText = item.innerText.toLowerCase();
+    if (section === 'library' && itemText.includes('library')) item.classList.add('active');
+    if (section === 'playlist' && itemText.includes('playlist')) item.classList.add('active');
+    if (section === 'settings' && itemText.includes('settings')) item.classList.add('active');
   });
 }
+
+// Settings & PIN Logic
+function openSettings() {
+  document.getElementById('pin-modal').style.display = 'flex';
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-error').style.display = 'none';
+  document.getElementById('pin-input').focus();
+}
+
+function closePinModal() {
+  document.getElementById('pin-modal').style.display = 'none';
+}
+
+async function verifyPin() {
+  const pin = document.getElementById('pin-input').value;
+  const res = await fetch("/api/verify-pin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pin })
+  });
+
+  if (res.ok) {
+    closePinModal();
+    showSection('settings');
+    await loadSettings();
+  } else {
+    document.getElementById('pin-error').style.display = 'block';
+  }
+}
+
+async function loadSettings() {
+  const res = await fetch("/api/settings");
+  const settings = await res.json();
+
+  document.getElementById('theme-mode').value = settings.theme || 'system';
+  document.getElementById('player-name-input').value = settings.playerName || 'FluxPlayer';
+  document.getElementById('autoplay-checkbox').checked = settings.autoplay || false;
+
+  applyThemeMode(settings.theme || 'system');
+}
+
+async function updateSettings() {
+  const settings = {
+    theme: document.getElementById('theme-mode').value,
+    playerName: document.getElementById('player-name-input').value,
+    autoplay: document.getElementById('autoplay-checkbox').checked,
+    accent: document.body.getAttribute('data-theme') || 'blue'
+  };
+
+  await fetch("/api/settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings)
+  });
+
+  applyThemeMode(settings.theme);
+}
+
+function applyThemeMode(mode) {
+  if (mode === 'dark') {
+    document.documentElement.style.filter = '';
+    document.body.classList.remove('light-theme');
+  } else if (mode === 'light') {
+    document.body.classList.add('light-theme');
+  } else {
+    // System
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+  }
+}
+
+function openChangePin() {
+  document.getElementById('change-pin-modal').style.display = 'flex';
+  document.getElementById('old-pin-input').value = '';
+  document.getElementById('new-pin-input').value = '';
+  document.getElementById('change-pin-error').style.display = 'none';
+}
+
+function closeChangePinModal() {
+  document.getElementById('change-pin-modal').style.display = 'none';
+}
+
+async function updatePin() {
+  const oldPin = document.getElementById('old-pin-input').value;
+  const newPin = document.getElementById('new-pin-input').value;
+
+  if (newPin.length !== 4) {
+    const err = document.getElementById('change-pin-error');
+    err.innerText = "New PIN must be 4 digits.";
+    err.style.display = 'block';
+    return;
+  }
+
+  const res = await fetch("/api/update-pin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ oldPin, newPin })
+  });
+
+  if (res.ok) {
+    closeChangePinModal();
+    alert("PIN updated successfully.");
+  } else {
+    const err = document.getElementById('change-pin-error');
+    err.innerText = "Incorrect current PIN.";
+    err.style.display = 'block';
+  }
+}
+
+// Add enter key support for PIN
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('pin-modal').style.display === 'flex') {
+      verifyPin();
+    } else if (document.getElementById('change-pin-modal').style.display === 'flex') {
+      updatePin();
+    }
+  }
+});
 
 async function clearPlaylist() {
   if (!confirm("Are you sure you want to clear the playlist?")) return;
@@ -389,6 +517,18 @@ function formatTime(seconds) {
 async function init() {
   const savedTheme = localStorage.getItem('dexplayer-theme');
   if (savedTheme) setTheme(savedTheme);
+
+  // Load initial settings to apply theme mode (light/dark/system)
+  try {
+    const res = await fetch("/api/settings");
+    if (res.ok) {
+      const settings = await res.json();
+      applyThemeMode(settings.theme || 'system');
+    }
+  } catch (e) {
+    console.log("Settings not loaded yet");
+  }
+
   await loadSongs();
   await loadPlaylist();
 }

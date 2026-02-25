@@ -14,6 +14,9 @@ app.use("/landing", express.static("landing"));
 
 const MUSIC_DIR = path.join(__dirname, "music");
 const PLAYLIST_FILE = path.join(__dirname, "playlist.json");
+const CONFIG_DIR = path.join(__dirname, "config");
+const SETTINGS_FILE = path.join(CONFIG_DIR, "setting.json");
+const PIN_FILE = path.join(CONFIG_DIR, "pin.json");
 
 if (!fs.existsSync(MUSIC_DIR)) fs.mkdirSync(MUSIC_DIR);
 if (!fs.existsSync(PLAYLIST_FILE)) fs.writeFileSync(PLAYLIST_FILE, "[]");
@@ -168,6 +171,51 @@ app.post("/songs/delete", (req, res) => {
         }
     }
     res.status(400).json({ error: "Invalid file" });
+});
+
+// Settings & PIN Endpoints
+app.get("/api/settings", (req, res) => {
+    if (fs.existsSync(SETTINGS_FILE)) {
+        const settings = JSON.parse(fs.readFileSync(SETTINGS_FILE));
+        res.json(settings);
+    } else {
+        res.status(404).json({ error: "Settings not found" });
+    }
+});
+
+app.post("/api/settings", (req, res) => {
+    if (req.body) {
+        fs.writeFileSync(SETTINGS_FILE, JSON.stringify(req.body, null, 2));
+        res.json({ ok: true });
+    } else {
+        res.status(400).json({ error: "Invalid data" });
+    }
+});
+
+app.post("/api/verify-pin", (req, res) => {
+    if (req.body && req.body.pin) {
+        if (fs.existsSync(PIN_FILE)) {
+            const data = JSON.parse(fs.readFileSync(PIN_FILE));
+            if (data.pin === req.body.pin) {
+                return res.json({ ok: true });
+            }
+        }
+    }
+    res.status(401).json({ error: "Incorrect PIN" });
+});
+
+app.post("/api/update-pin", (req, res) => {
+    if (req.body && req.body.oldPin && req.body.newPin) {
+        if (fs.existsSync(PIN_FILE)) {
+            const data = JSON.parse(fs.readFileSync(PIN_FILE));
+            if (data.pin === req.body.oldPin) {
+                data.pin = req.body.newPin;
+                fs.writeFileSync(PIN_FILE, JSON.stringify(data, null, 2));
+                return res.json({ ok: true });
+            }
+        }
+    }
+    res.status(401).json({ error: "Invalid PIN update request" });
 });
 
 app.listen(PORT, () => console.log(`DexPlayer beží na ${PORT} 🚀`));

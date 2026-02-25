@@ -11,6 +11,8 @@ DexPlayer is a modern, high-performance music player built with Node.js and a sl
 - **Visualizers**: Immersive frequency bar animations in fullscreen mode.
 - **Integrated Playback**: Full control (Play/Pause/Stop, Next/Prev, Shuffle, Repeat).
 - **Library Management**: Search, sort, upload, and delete songs directly from the UI.
+- **PIN Protection**: Secure access to system settings with a customizable 4-digit PIN.
+- **Appearance Settings**: Toggle between Dark, Light, and System theme modes.
 - **Stability**: Robust backend with explicit state management.
 
 ## 🚀 Quick Start

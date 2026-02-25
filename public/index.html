@@ -26,6 +26,9 @@
         <a href="#" class="nav-item" onclick="showSection('playlist')">
           <i class="fa-solid fa-list-ul"></i> Playlist
         </a>
+        <a href="#" class="nav-item" id="nav-settings" onclick="openSettings()">
+          <i class="fa-solid fa-gear"></i> Settings
+        </a>
         <div class="nav-divider"></div>
         <div class="theme-switcher">
           <h3>Accent Color</h3>
@@ -85,6 +88,45 @@
         </div>
         <div class="playlist-container" id="playlist-list">
           <!-- Playlist items will be injected here -->
+        </div>
+      </section>
+
+      <section id="settings-section" class="content-section" style="display: none;">
+        <div class="section-header">
+          <h2>Settings</h2>
+        </div>
+        <div class="settings-container">
+          <div class="settings-group">
+            <h3>Appearance</h3>
+            <div class="setting-item">
+              <label>Theme Mode</label>
+              <select id="theme-mode" onchange="updateSettings()">
+                <option value="system">System (Default)</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-group">
+            <h3>System</h3>
+            <div class="setting-item">
+              <label>Player Name</label>
+              <input type="text" id="player-name-input" placeholder="Enter name..." onchange="updateSettings()">
+            </div>
+            <div class="setting-item">
+              <label>Auto-play next song</label>
+              <label class="switch">
+                <input type="checkbox" id="autoplay-checkbox" onchange="updateSettings()">
+                <span class="slider round"></span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-group">
+            <h3>Security</h3>
+            <div class="setting-item">
+              <button class="btn-secondary" onclick="openChangePin()">Change Access PIN</button>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -162,6 +204,50 @@
       </div>
     </div>
     <div class="fs-background" id="fs-bg"></div>
+  </div>
+
+  <!-- PIN Modal -->
+  <div id="pin-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>PIN Required</h3>
+        <button class="close-modal" onclick="closePinModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Enter PIN to access settings:</p>
+        <div class="pin-input-container">
+          <input type="password" id="pin-input" maxlength="4" placeholder="••••">
+        </div>
+        <div id="pin-error" class="error-text" style="display: none;">Incorrect PIN. Try again.</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="verifyPin()">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change PIN Modal -->
+  <div id="change-pin-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Change Access PIN</h3>
+        <button class="close-modal" onclick="closeChangePinModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-item-col">
+          <label>Current PIN</label>
+          <input type="password" id="old-pin-input" maxlength="4" placeholder="••••">
+        </div>
+        <div class="setting-item-col">
+          <label>New PIN</label>
+          <input type="password" id="new-pin-input" maxlength="4" placeholder="••••">
+        </div>
+        <div id="change-pin-error" class="error-text" style="display: none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="updatePin()">Save PIN</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
