@@ -207,36 +207,64 @@ function updateNowPlaying(filename) {
 }
 
 async function addToPlaylist(song) {
-  await fetch("/playlist/add", {
+  const res = await fetch("/playlist/add", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ song })
   });
+  const updatedPlaylist = await res.json();
+  const newIndex = updatedPlaylist.length - 1;
+
+  // Auto-play the song that was just added
+  const playRes = await fetch("/play", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ index: newIndex })
+  });
+  const playData = await playRes.json();
+  if (!playData.error) {
+    setPlayState(true);
+  }
   loadPlaylist();
 }
 
 async function playSpecific(index) {
+  if (currentPlaylist.length === 0) return;
   currentPlayingFile = null; // Force reset when explicitly selecting a song
-  await fetch("/play", {
+  const res = await fetch("/play", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ index })
   });
+  const data = await res.json();
+  if (data.error) {
+    console.error("Playback error:", data.error);
+    return;
+  }
   loadPlaylist();
   setPlayState(true);
 }
 
 async function togglePlay() {
+  if (currentPlaylist.length === 0) return;
+
   if (isPlaying) {
     await fetch("/pause", { method: "POST" });
     setPlayState(false);
   } else {
+    let res;
     if (currentIndex >= 0 && currentPlayingFile) {
-      await fetch("/resume", { method: "POST" });
+      res = await fetch("/resume", { method: "POST" });
     } else {
-      await fetch("/play", { method: "POST" });
+      res = await fetch("/play", { method: "POST" });
     }
-    setPlayState(true);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (!data.error) {
+        setPlayState(true);
+      }
+    }
   }
 }
 
@@ -252,7 +280,7 @@ function setPlayState(playing) {
   isPlaying = playing;
   const btn = document.getElementById('play-pause-btn');
   btn.innerHTML = playing ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
-  document.querySelector('.player-bar .now-playing').classList.toggle('playing', playing);
+  document.querySelector('.player-deck').classList.toggle('playing', playing);
 
   if (playing) {
     startProgress();
@@ -304,17 +332,25 @@ function stopProgress() {
 }
 
 async function next() {
+  if (currentPlaylist.length === 0) return;
   currentPlayingFile = null;
-  await fetch("/next", { method: "POST" });
-  loadPlaylist();
-  setPlayState(true);
+  const res = await fetch("/next", { method: "POST" });
+  const data = await res.json();
+  if (!data.error) {
+    loadPlaylist();
+    setPlayState(true);
+  }
 }
 
 async function prev() {
+  if (currentPlaylist.length === 0) return;
   currentPlayingFile = null;
-  await fetch("/prev", { method: "POST" });
-  loadPlaylist();
-  setPlayState(true);
+  const res = await fetch("/prev", { method: "POST" });
+  const data = await res.json();
+  if (!data.error) {
+    loadPlaylist();
+    setPlayState(true);
+  }
 }
 
 async function toggleShuffle() {
@@ -347,38 +383,149 @@ function setTheme(theme) {
   localStorage.setItem('dexplayer-theme', theme);
 }
 
-async function upload() {
-  const fileInput = document.getElementById("file-upload");
-  const file = fileInput.files[0];
-  if (!file) return;
-  const form = new FormData();
-  form.append("song", file);
-  const btn = document.querySelector('.upload-section .btn-primary');
-  const originalText = btn.innerText;
-  btn.innerText = "Uploading...";
-  await fetch("/upload", { method: "POST", body: form });
-  btn.innerText = originalText;
-  fileInput.value = "";
-  loadSongs();
+// Upload Logic
+async function handleStudioUpload(event) {
+  const files = event.dataTransfer ? event.dataTransfer.files : event.target.files;
+  if (!files.length) return;
+
+  const container = document.getElementById('upload-progress-container');
+  const fill = document.getElementById('upload-progress-fill');
+  const percent = document.getElementById('upload-percent');
+  const status = document.getElementById('upload-status');
+
+  container.style.display = 'block';
+  fill.style.width = '0%';
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    status.innerText = `Uploading: ${file.name} (${i + 1}/${files.length})`;
+
+    const formData = new FormData();
+    formData.append("song", file);
+
+    try {
+      const response = await fetch("/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      if (response.ok) {
+        const p = Math.round(((i + 1) / files.length) * 100);
+        fill.style.width = `${p}%`;
+        percent.innerText = `${p}%`;
+      }
+    } catch (err) {
+      console.error("Upload failed", err);
+    }
+  }
+
+  status.innerText = "All uploads complete!";
+  setTimeout(() => {
+    container.style.display = 'none';
+    loadSongs();
+    loadStudio();
+  }, 2000);
 }
 
-function showSection(section) {
-  document.getElementById('library-section').style.display = section === 'library' ? 'block' : 'none';
-  document.getElementById('playlist-section').style.display = section === 'playlist' ? 'block' : 'none';
-  document.getElementById('settings-section').style.display = section === 'settings' ? 'block' : 'none';
+// Studio File Management
+async function loadStudio() {
+  const res = await fetch("/songs");
+  const songs = await res.json();
+  const list = document.getElementById('studio-file-list');
+  if (!list) return;
 
-  document.querySelectorAll('.nav-item').forEach(item => {
+  list.innerHTML = songs.map(song => `
+    <div class="studio-file-item">
+      <div class="file-name">${song.filename}</div>
+      <div class="actions">
+        <button class="btn-delete-small" onclick="deleteSongFromStudio('${song.filename.replace(/'/g, "\\'")}')">  
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function deleteSongFromStudio(filename) {
+  if (confirm(`Delete ${filename}?`)) {
+    await deleteSong(filename);
+    loadStudio();
+  }
+}
+
+async function upload() {
+  const fileInput = document.getElementById("file-upload");
+  if (!fileInput.files.length) return;
+  const formData = new FormData();
+  formData.append("song", fileInput.files[0]);
+  const response = await fetch("/upload", { method: "POST", body: formData });
+  if (response.ok) loadSongs();
+}
+
+// Drag and Drop Setup
+document.addEventListener('DOMContentLoaded', () => {
+  const dropZone = document.getElementById('drop-zone');
+  if (dropZone) {
+    dropZone.addEventListener('click', () => document.getElementById('studio-file-upload').click());
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+    });
+
+    dropZone.addEventListener('drop', handleStudioUpload, false);
+  }
+});
+
+function showSection(section) {
+  const settingsSection = document.getElementById('settings-section');
+  const librarySection = document.getElementById('library-section');
+  const playlistSection = document.getElementById('playlist-section');
+
+  if (section === 'settings') {
+    settingsSection.style.display = 'flex';
+    document.getElementById('studio-section').style.display = 'none';
+  } else if (section === 'studio') {
+    document.getElementById('studio-section').style.display = 'flex';
+    settingsSection.style.display = 'none';
+    loadStudio();
+  } else {
+    settingsSection.style.display = 'none';
+    document.getElementById('studio-section').style.display = 'none';
+    librarySection.style.display = 'flex';
+    playlistSection.style.display = 'flex';
+  }
+
+  document.querySelectorAll('.nav-link').forEach(item => {
     item.classList.remove('active');
-    // More robust active state check
     const itemText = item.innerText.toLowerCase();
     if (section === 'library' && itemText.includes('library')) item.classList.add('active');
-    if (section === 'playlist' && itemText.includes('playlist')) item.classList.add('active');
+    if (section === 'studio' && itemText.includes('studio')) item.classList.add('active');
     if (section === 'settings' && itemText.includes('settings')) item.classList.add('active');
   });
 }
 
 // Settings & PIN Logic
 function openSettings() {
+  window.unlockTarget = 'settings';
+  document.getElementById('pin-modal').style.display = 'flex';
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-error').style.display = 'none';
+  document.getElementById('pin-input').focus();
+}
+
+function openStudio() {
+  window.unlockTarget = 'studio';
   document.getElementById('pin-modal').style.display = 'flex';
   document.getElementById('pin-input').value = '';
   document.getElementById('pin-error').style.display = 'none';
@@ -399,8 +546,9 @@ async function verifyPin() {
 
   if (res.ok) {
     closePinModal();
-    showSection('settings');
-    await loadSettings();
+    const target = window.unlockTarget || 'settings';
+    showSection(target);
+    if (target === 'settings') await loadSettings();
   } else {
     document.getElementById('pin-error').style.display = 'block';
   }

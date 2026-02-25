@@ -4,250 +4,235 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FluxPlayer - Ultimate Music Experience</title>
+  <title>FluxPlayer - Prism Experience</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 
 <body>
   <div class="app-container">
-    <aside class="sidebar">
-      <div class="logo">
-        <i class="fa-solid fa-compact-disc"></i>
-        <span>FluxPlayer</span>
+    <header class="top-header">
+      <div class="header-left">
+        <div class="logo">
+          <i class="fa-solid fa-compact-disc"></i>
+          <span>FluxPlayer</span>
+        </div>
+        <nav class="main-nav">
+          <button class="nav-link active" onclick="showSection('library')">Library</button>
+          <button class="nav-link" onclick="openStudio()">Studio</button>
+          <button class="nav-link" id="nav-settings" onclick="openSettings()">Settings</button>
+        </nav>
       </div>
-      <nav class="nav-menu">
-        <a href="#" class="nav-item active" onclick="showSection('library')">
-          <i class="fa-solid fa-music"></i> Library
-        </a>
-        <a href="#" class="nav-item" onclick="showSection('playlist')">
-          <i class="fa-solid fa-list-ul"></i> Playlist
-        </a>
-        <a href="#" class="nav-item" id="nav-settings" onclick="openSettings()">
-          <i class="fa-solid fa-gear"></i> Settings
-        </a>
-        <div class="nav-divider"></div>
-        <div class="theme-switcher">
-          <h3>Accent Color</h3>
-          <div class="theme-options">
-            <button class="theme-btn blue" onclick="setTheme('blue')"></button>
-            <button class="theme-btn green" onclick="setTheme('green')"></button>
-            <button class="theme-btn purple" onclick="setTheme('purple')"></button>
-            <button class="theme-btn orange" onclick="setTheme('orange')"></button>
-          </div>
-        </div>
-        <div class="nav-divider"></div>
-        <div class="upload-section">
-          <h3>Upload Song</h3>
-          <label for="file-upload" class="custom-file-upload">
-            <i class="fa-solid fa-cloud-upload-alt"></i> Choose File
-          </label>
-          <input type="file" id="file-upload" hidden>
-          <button class="btn-primary" onclick="upload()">Upload</button>
-        </div>
-      </nav>
-    </aside>
 
-    <main class="main-content">
-      <header class="top-bar">
+      <div class="header-center">
         <div class="search-box">
           <i class="fa-solid fa-search"></i>
-          <input type="text" id="search-input" placeholder="Search songs, artists..." oninput="filterSongs()">
+          <input type="text" id="search-input" placeholder="Search your universe..." oninput="filterSongs()">
         </div>
-        <div class="top-actions">
-          <button class="icon-toggle" onclick="toggleFullscreen()" title="Fullscreen Mode">
-            <i class="fa-solid fa-expand"></i>
-          </button>
-        </div>
-      </header>
+      </div>
 
-      <section id="library-section" class="content-section">
-        <div class="section-header">
+      <div class="header-right">
+        <div class="upload-area">
+          <label for="file-upload" class="upload-trigger">
+            <i class="fa-solid fa-cloud-upload-alt"></i>
+          </label>
+          <input type="file" id="file-upload" hidden onchange="upload()">
+        </div>
+        <button class="icon-btn" onclick="toggleFullscreen()" title="Fullscreen">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="content-split">
+      <section id="library-section" class="pane-left">
+        <div class="pane-header">
           <h2>Library</h2>
-          <div class="header-controls">
+          <div class="pane-controls">
             <select id="sort-select" onchange="sortLibrary()">
-              <option value="name">Sort by Name</option>
-              <option value="artist">Sort by Artist</option>
-              <option value="newest">Sort by Newest</option>
+              <option value="name">Name</option>
+              <option value="artist">Artist</option>
             </select>
-            <span class="song-count" id="library-count">0 songs</span>
+            <span class="count-tag" id="library-count">0 songs</span>
           </div>
         </div>
-        <div class="song-grid" id="songs-list">
-          <!-- Songs will be injected here -->
+        <div class="grid-view" id="songs-list">
+          <!-- Songs injected here -->
         </div>
       </section>
 
-      <section id="playlist-section" class="content-section" style="display: none;">
-        <div class="section-header">
-          <h2>Current Playlist</h2>
-          <button class="btn-secondary" onclick="clearPlaylist()">Clear All</button>
+      <section id="playlist-section" class="pane-right">
+        <div class="pane-header">
+          <h2>Queue</h2>
+          <button class="btn-text" onclick="clearPlaylist()">Clear All</button>
         </div>
-        <div class="playlist-container" id="playlist-list">
-          <!-- Playlist items will be injected here -->
+        <div class="list-view" id="playlist-list">
+          <!-- Playlist items injected here -->
         </div>
       </section>
 
-      <section id="settings-section" class="content-section" style="display: none;">
-        <div class="section-header">
-          <h2>Settings</h2>
+      <section id="studio-section" class="overlay-section" style="display: none;">
+        <div class="section-card studio-card">
+          <div class="card-header">
+            <h2>Music Studio</h2>
+            <button class="close-btn" onclick="showSection('library')">&times;</button>
+          </div>
+          <div class="studio-body">
+            <div id="drop-zone" class="upload-drop-zone">
+              <i class="fa-solid fa-cloud-upload-alt"></i>
+              <p>Drag & Drop music files here</p>
+              <span>or click to browse</span>
+              <input type="file" id="studio-file-upload" multiple hidden onchange="handleStudioUpload(event)">
+            </div>
+
+            <div id="upload-progress-container" style="display: none;">
+              <div class="progress-info">
+                <span id="upload-status">Uploading...</span>
+                <span id="upload-percent">0%</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div id="upload-progress-fill" class="progress-bar-fill"></div>
+              </div>
+            </div>
+
+            <div class="file-manager">
+              <h3>Library Management</h3>
+              <div class="file-list-header">
+                <span>File</span>
+                <span>Actions</span>
+              </div>
+              <div id="studio-file-list" class="file-list-items">
+                <!-- File items injected here -->
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="settings-container">
-          <div class="settings-group">
-            <h3>Appearance</h3>
-            <div class="setting-item">
-              <label>Theme Mode</label>
-              <select id="theme-mode" onchange="updateSettings()">
-                <option value="system">System (Default)</option>
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-              </select>
-            </div>
+      </section>
+
+      <section id="settings-section" class="overlay-section" style="display: none;">
+        <div class="section-card">
+          <div class="card-header">
+            <h2>Settings</h2>
+            <button class="close-btn" onclick="showSection('library')">&times;</button>
           </div>
-          <div class="settings-group">
-            <h3>System</h3>
-            <div class="setting-item">
-              <label>Player Name</label>
-              <input type="text" id="player-name-input" placeholder="Enter name..." onchange="updateSettings()">
+          <div class="settings-body">
+            <div class="settings-group">
+              <h3>Appearance</h3>
+              <div class="item">
+                <label>Theme</label>
+                <select id="theme-mode" onchange="updateSettings()">
+                  <option value="system">System</option>
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+              <div class="item">
+                <label>Accent</label>
+                <div class="accent-picks">
+                  <div class="pick blue" onclick="setTheme('blue')"></div>
+                  <div class="pick green" onclick="setTheme('green')"></div>
+                  <div class="pick purple" onclick="setTheme('purple')"></div>
+                </div>
+              </div>
             </div>
-            <div class="setting-item">
-              <label>Auto-play next song</label>
-              <label class="switch">
-                <input type="checkbox" id="autoplay-checkbox" onchange="updateSettings()">
-                <span class="slider round"></span>
-              </label>
+            <div class="settings-group">
+              <h3>System</h3>
+              <div class="item">
+                <label>Player Name</label>
+                <input type="text" id="player-name-input" onchange="updateSettings()">
+              </div>
+              <div class="item">
+                <label>Auto-play</label>
+                <label class="switch">
+                  <input type="checkbox" id="autoplay-checkbox" onchange="updateSettings()">
+                  <span class="slider"></span>
+                </label>
+              </div>
             </div>
-          </div>
-          <div class="settings-group">
-            <h3>Security</h3>
-            <div class="setting-item">
-              <button class="btn-secondary" onclick="openChangePin()">Change Access PIN</button>
+            <div class="settings-group">
+              <h3>Security</h3>
+              <button class="btn-secondary" onclick="openChangePin()">Change PIN</button>
             </div>
           </div>
         </div>
       </section>
     </main>
 
-    <footer class="player-bar">
-      <div class="now-playing">
-        <div class="album-art" id="current-art">
+    <footer class="player-deck">
+      <div class="deck-track">
+        <div class="deck-art" id="current-art">
           <i class="fa-solid fa-music"></i>
         </div>
-        <div class="track-info">
-          <div class="track-name" id="current-track">Not Playing</div>
-          <div class="artist-name" id="current-artist">Select a song</div>
-        </div>
-        <div id="mini-visualizer" class="mini-visualizer">
-          <span></span><span></span><span></span><span></span>
+        <div class="deck-info">
+          <div class="name" id="current-track">Not Playing</div>
+          <div class="meta" id="current-artist">Select a song</div>
         </div>
       </div>
 
-      <div class="player-controls">
-        <div class="control-buttons">
-          <button class="ctrl-btn" id="shuffle-btn" onclick="toggleShuffle()" title="Shuffle">
-            <i class="fa-solid fa-random"></i>
-          </button>
-          <button class="ctrl-btn" onclick="prev()" title="Previous">
-            <i class="fa-solid fa-step-backward"></i>
-          </button>
-          <button class="ctrl-btn main-play" id="play-pause-btn" onclick="togglePlay()" title="Play">
-            <i class="fa-solid fa-play"></i>
-          </button>
-          <button class="ctrl-btn" onclick="stopMusic()" title="Stop">
-            <i class="fa-solid fa-stop"></i>
-          </button>
-          <button class="ctrl-btn" onclick="next()" title="Next">
-            <i class="fa-solid fa-step-forward"></i>
-          </button>
-          <button class="ctrl-btn" id="repeat-btn" onclick="toggleRepeat()" title="Repeat">
-            <i class="fa-solid fa-redo"></i>
-          </button>
+      <div class="deck-controls">
+        <div class="btns">
+          <button class="btn-sm" id="shuffle-btn" onclick="toggleShuffle()"><i class="fa-solid fa-random"></i></button>
+          <button class="btn-md" onclick="prev()"><i class="fa-solid fa-step-backward"></i></button>
+          <button class="btn-lg main" id="play-pause-btn" onclick="togglePlay()"><i
+              class="fa-solid fa-play"></i></button>
+          <button class="btn-md" onclick="next()"><i class="fa-solid fa-step-forward"></i></button>
+          <button class="btn-sm" id="repeat-btn" onclick="toggleRepeat()"><i class="fa-solid fa-redo"></i></button>
         </div>
-        <div class="progress-container">
+        <div class="timeline">
           <span class="time" id="current-time">0:00</span>
-          <div class="progress-bar-bg" onclick="seek(event)">
-            <div class="progress-bar-fill" id="progress-fill"></div>
+          <div class="scrub-bar" onclick="seek(event)">
+            <div class="fill" id="progress-fill"></div>
           </div>
           <span class="time" id="total-time">0:00</span>
         </div>
       </div>
 
-      <div class="volume-controls">
+      <div class="deck-volume">
         <i class="fa-solid fa-volume-up"></i>
-        <input type="range" min="0" max="100" value="50" class="volume-slider" id="volume-slider"
-          oninput="volume(this.value)">
+        <input type="range" min="0" max="100" value="50" class="vol-slider" oninput="volume(this.value)">
       </div>
     </footer>
   </div>
 
-  <!-- Fullscreen Overlay -->
-  <div id="fullscreen-overlay" class="fullscreen-overlay">
-    <button class="close-fullscreen" onclick="toggleFullscreen()">
-      <i class="fa-solid fa-compress"></i>
-    </button>
-    <div class="fs-content">
-      <div class="fs-art-container">
-        <img src="" id="fs-art" alt="Album Art">
-        <div class="fs-visualizer" id="fs-visualizer">
-          <!-- Bars will be generated by JS -->
-        </div>
-      </div>
-      <div class="fs-info">
-        <h1 id="fs-track">Song Title</h1>
-        <h2 id="fs-artist">Artist Name</h2>
-        <div class="fs-controls">
-          <!-- Minimal controls copied from player bar -->
-        </div>
-      </div>
+  <!-- Modals -->
+  <div id="pin-modal" class="modal-blur" style="display: none;">
+    <div class="modal-glass">
+      <h3>PIN Required</h3>
+      <input type="password" id="pin-input" maxlength="4" placeholder="••••">
+      <div id="pin-error" class="error">Access Denied</div>
+      <button class="btn-glow" onclick="verifyPin()">Unlock</button>
     </div>
-    <div class="fs-background" id="fs-bg"></div>
   </div>
 
-  <!-- PIN Modal -->
-  <div id="pin-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>PIN Required</h3>
-        <button class="close-modal" onclick="closePinModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>Enter PIN to access settings:</p>
-        <div class="pin-input-container">
-          <input type="password" id="pin-input" maxlength="4" placeholder="••••">
-        </div>
-        <div id="pin-error" class="error-text" style="display: none;">Incorrect PIN. Try again.</div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-primary" onclick="verifyPin()">Unlock</button>
+  <div id="change-pin-modal" class="modal-blur" style="display: none;">
+    <div class="modal-glass">
+      <h3>New Security PIN</h3>
+      <input type="password" id="old-pin-input" placeholder="Current PIN">
+      <input type="password" id="new-pin-input" placeholder="New PIN">
+      <div id="change-pin-error" class="error"></div>
+      <div class="modal-btns">
+        <button class="btn-text" onclick="closeChangePinModal()">Cancel</button>
+        <button class="btn-glow" onclick="updatePin()">Update</button>
       </div>
     </div>
   </div>
 
-  <!-- Change PIN Modal -->
-  <div id="change-pin-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Change Access PIN</h3>
-        <button class="close-modal" onclick="closeChangePinModal()">&times;</button>
+  <div id="fullscreen-overlay" class="fs-prism">
+    <button class="fs-close" onclick="toggleFullscreen()">&times;</button>
+    <div class="fs-main">
+      <div class="fs-art-wrap">
+        <img src="" id="fs-art">
       </div>
-      <div class="modal-body">
-        <div class="setting-item-col">
-          <label>Current PIN</label>
-          <input type="password" id="old-pin-input" maxlength="4" placeholder="••••">
-        </div>
-        <div class="setting-item-col">
-          <label>New PIN</label>
-          <input type="password" id="new-pin-input" maxlength="4" placeholder="••••">
-        </div>
-        <div id="change-pin-error" class="error-text" style="display: none;"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-primary" onclick="updatePin()">Save PIN</button>
+      <div class="fs-meta">
+        <h1 id="fs-track">Title</h1>
+        <h2 id="fs-artist">Artist</h2>
       </div>
     </div>
+    <div id="fs-bg" class="fs-bg"></div>
   </div>
 
   <script src="app.js"></script>

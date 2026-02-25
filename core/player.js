@@ -20,20 +20,30 @@ function start() {
     mpv.on("exit", () => mpv = null);
 }
 
-function send(command) {
+function send(command, retries = 10) {
     return new Promise((resolve, reject) => {
-        const client = net.createConnection(SOCKET);
+        function attempt(remaining) {
+            const client = net.createConnection(SOCKET);
 
-        client.on("connect", () => {
-            client.write(JSON.stringify({ command }) + "\n");
-        });
+            client.on("connect", () => {
+                client.write(JSON.stringify({ command }) + "\n");
+            });
 
-        client.on("data", data => {
-            resolve(data.toString());
-            client.end();
-        });
+            client.on("data", data => {
+                resolve(data.toString());
+                client.destroy();
+            });
 
-        client.on("error", reject);
+            client.on("error", err => {
+                client.destroy();
+                if (remaining > 0) {
+                    setTimeout(() => attempt(remaining - 1), 200);
+                } else {
+                    reject(new Error(`mpv socket not available: ${err.message}`));
+                }
+            });
+        }
+        attempt(retries);
     });
 }
 

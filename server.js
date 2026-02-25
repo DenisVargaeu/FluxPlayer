@@ -89,9 +89,22 @@ app.post("/play", async (req, res) => {
     }
 
     const song = playlist[currentIndex];
-    await player.play(path.join(MUSIC_DIR, song));
-    await player.setPause(false);
-    res.json({ playing: song, currentIndex });
+    try {
+        await player.play(path.join(MUSIC_DIR, song));
+        await player.setPause(false);
+        res.json({ playing: song, currentIndex });
+    } catch (err) {
+        console.error("Playback error:", err.message);
+        // Restart mpv and retry once
+        player.init();
+        try {
+            await player.play(path.join(MUSIC_DIR, song));
+            await player.setPause(false);
+            res.json({ playing: song, currentIndex });
+        } catch (err2) {
+            res.status(500).json({ error: err2.message });
+        }
+    }
 });
 
 app.post("/pause", async (_, res) => {
